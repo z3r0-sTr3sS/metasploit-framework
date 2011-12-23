@@ -5,8 +5,8 @@
 module Rex
 module PeParsey
 
-end
-end
+	autoload :Pe,        'rex/peparsey/pe'
+	autoload :PeMemDump, 'rex/peparsey/pe_memdump'
 
-require 'rex/peparsey/pe'
-require 'rex/peparsey/pe_memdump'
+end
+end

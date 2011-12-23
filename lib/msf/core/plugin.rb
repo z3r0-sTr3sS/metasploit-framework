@@ -1,4 +1,4 @@
-require 'rex/sync/ref'
+#require 'rex/sync/ref'
 
 module Msf
 

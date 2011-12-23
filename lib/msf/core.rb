@@ -14,10 +14,41 @@ require 'msf/sanity'
 
 # The framework-core depends on Rex
 require 'rex'
-require 'rex/ui'
 
+# Set the log source, and initialize demand-loaded requires
 module Msf
 	LogSource = "core"
+
+	# Event subscriber interfaces
+	autoload :UiEventSubscriber, 'msf/events'
+
+	# Wrappers
+	autoload :EncodedPayload, 'msf/core/encoded_payload'
+
+	# Pseudo-modules
+	autoload :Handler, 'msf/core/handler'
+
+	# Mixins
+	autoload :Encoder,       'msf/core/encoder'
+	autoload :EncoderState,  'msf/core/encoder'
+	autoload :Auxiliary,     'msf/core/auxiliary'
+	autoload :Nop,           'msf/core/nop'
+	autoload :Payload,       'msf/core/payload'
+	autoload :ExploitEvent,  'msf/core/exploit'
+	autoload :Exploit,       'msf/core/exploit'
+	autoload :Post,          'msf/core/post'
+
+	# Drivers
+	autoload :ExploitDriver, 'msf/core/exploit_driver'
+
+	# Framework context and core classes
+	autoload :Framework, 'msf/core/framework'
+
+	# Session stuff
+	autoload :Session,      'msf/core/session'
+	autoload :SessionEvent, 'msf/core/session'
+
+	autoload :Util, 'msf/util'
 end
 
 # General

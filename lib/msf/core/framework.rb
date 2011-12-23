@@ -1,6 +1,11 @@
 require 'msf/core'
 require 'msf/util'
 
+#require 'msf/util/svn'
+#require 'msf/util/exe'
+#require 'msf/events'
+
+
 module Msf
 
 ###

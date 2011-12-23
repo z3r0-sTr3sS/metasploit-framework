@@ -5,9 +5,9 @@
 module Rex
 module PeScan
 
-end
-end
+	autoload :Analyze, 'rex/pescan/analyze'
+	autoload :Scanner, 'rex/pescan/scanner'
+	autoload :Search,  'rex/pescan/search'
 
-require 'rex/pescan/analyze'
-require 'rex/pescan/scanner'
-require 'rex/pescan/search'
+end
+end
