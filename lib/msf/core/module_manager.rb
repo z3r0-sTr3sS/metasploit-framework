@@ -818,30 +818,120 @@ class ModuleManager < ModuleSet
 		framework.events.on_module_load(name, dup)
 	end
 
+	def fullname_to_paths(type, parts)
+		files = []
+		paths = []
+
+		check_paths = module_paths
+		#paths = [ Msf::Config.module_directory ]
+
+		type_str = type.dup
+		type_str << "s" if not [ MODULE_AUX, MODULE_POST ].include? type
+
+		check_paths.each { |path|
+
+			file_base = File.join(path, type_str)
+
+			# Payloads get special treatment
+			if type == MODULE_PAYLOAD
+				# Try single first
+				file = File.join(file_base, "singles", parts)
+				file << ".rb"
+				#puts "single? #{file.inspect}"
+				if File.exists?(file)
+					files << file
+					paths << path
+					next
+				end
+
+				# Is the payload staged?
+				stager = parts.last
+				#puts stager.inspect
+				if stager =~ /^(reverse_|bind_|find_|passivex)/
+					os = parts[0,1].first
+					# Special case payloads (aliased handlers)
+					# XXX: It would be ideal if this could be resolved without hardcoding it here.
+					if os == "windows"
+						case stager
+						when "find_tag"
+							stager = "findtag_ord"
+						when "reverse_http"
+							stager = "passivex"
+						end
+					end
+					stage = parts[-2,1].first
+					rest = parts[0, parts.length - 2]
+					file1 = File.join(file_base, "stagers", rest, "#{stager}.rb")
+					file2 = File.join(file_base, "stages", rest, "#{stage}.rb")
+					#puts "staged:"
+					#puts file1.inspect
+					#puts file2.inspect
+					next if not File.exists?(file1) or not File.exists?(file2)
+					files << file1
+					paths << path
+					files << file2
+					paths << path
+				end
+
+			else
+				file = File.join(file_base, parts)
+				file << ".rb"
+				#puts "Not a payload: #{file.inspect}"
+				next if not File.exists?(file)
+				files << file
+				paths << path
+
+			end
+		}
+
+		ret = [ files, paths ]
+		#puts "Returning: #{ret.inspect}"
+		ret
+	end
+
 	#
 	# Loads the files associated with a module and recalculates module
 	# associations.
 	#
-	def demand_load_module(fullname)
+	def demand_load_module(fullname, use_cache = true)
+		#puts "in demand_load_module(#{fullname.inspect}, #{use_cache.inspect})"
+		#puts caller.join("\n")
 		dlog("Demand loading module #{fullname}.", 'core', LEV_1)
 
-		return nil if (@modcache.group?(fullname) == false)
-		return nil if (@modcache[fullname]['FileNames'].nil?)
-		return nil if (@modcache[fullname]['FilePaths'].nil?)
+		parts  = fullname.split(/\//)
+		type = parts.slice!(0,1).first
+		files = []
+		paths = []
 
-		type  = fullname.split(/\//)[0]
-		files = @modcache[fullname]['FileNames'].split(',')
-		paths = @modcache[fullname]['FilePaths'].split(',')
+		#$stderr.puts module_paths.inspect
+
+		if use_cache
+			return nil if (@modcache.group?(fullname) == false)
+			return nil if (@modcache[fullname]['FileNames'].nil?)
+			return nil if (@modcache[fullname]['FilePaths'].nil?)
+
+			files = @modcache[fullname]['FileNames'].split(',')
+			paths = @modcache[fullname]['FilePaths'].split(',')
+		else
+			files, paths = fullname_to_paths(type, parts)
+			if files.length < 1
+				return nil
+			end
+		end
 
 		files.each_with_index { |file, idx|
 			dlog("Loading from file #{file}", 'core', LEV_2)
 
-			load_module_from_file(paths[idx], file, nil, nil, nil, true)
+			if not load_module_from_file(paths[idx], file, nil, nil, nil, true)
+				return nil
+			end
 		}
 
-		if (module_sets[type].postpone_recalc != true)
+		if (module_sets[type] and module_sets[type].postpone_recalc != true)
 			module_sets[type].recalculate
 		end
+
+		return true
 	end
 
 
