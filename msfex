@@ -1,0 +1,334 @@
+#!/usr/bin/env ruby
+#
+# $Id: $
+#
+# This user interface allows users to interact with the framework through a
+# command line interface (CLI) rather than having to use a prompting console
+# or web-based interface.
+#
+# This particular incarnation only supports running a single module. It will
+# not load the entire module tree.
+#
+# $Revision: $
+#
+
+msfbase = __FILE__
+while File.symlink?(msfbase)
+	msfbase = File.expand_path(File.readlink(msfbase), File.dirname(msfbase))
+end
+
+$:.unshift(File.join(File.dirname(msfbase), 'lib'))
+$:.unshift(ENV['MSF_LOCAL_LIB']) if ENV['MSF_LOCAL_LIB']
+
+
+# Check params
+require 'optparse'
+class OptsConsole
+	#
+	# Return a hash describing the options.
+	#
+	def self.parse(args)
+		options = {}
+
+		opts = OptionParser.new do |opts|
+			opts.banner = "Usage: msf [options]"
+
+			opts.separator ""
+			opts.separator "Specific options:"
+
+			opts.on("-r", "-r <filename>", "Execute the specified resource file(s)") do |r|
+				options['Resource'] ||= []
+				options['Resource'] << r
+			end
+
+			opts.on("-e", "-e <encoder>", "Use the specified encoder (-l to list)") do |r|
+				options['payload'] = r
+			end
+
+			opts.on("-p", "-p <payload>", "Use the specified payload (-l to list)") do |r|
+				options['payload'] = r
+			end
+
+			opts.on("-n", "-n <nop>", "Use the specified NOP generator (-l to list)") do |r|
+				options['nop'] = r
+			end
+
+			opts.separator ""
+			opts.separator "Common options:"
+
+			opts.on_tail("-h", "--help", "Show this message") do
+				puts opts
+				exit
+			end
+		end
+
+		begin
+			opts.parse!(args)
+		rescue OptionParser::InvalidOption
+			puts "Invalid option, try -h for usage"
+			exit
+		end
+
+		options
+	end
+end
+
+options = OptsConsole.parse(ARGV)
+
+
+
+###
+# Other options from msfcli that are not being used
+#
+#
+=begin
+
+			opts.on("-d", "-d", "Execute the console as defanged") do
+				options['Defanged'] = true
+			end
+
+			opts.on("-o", "-o <filename>", "Output to the specified file") do |o|
+				options['LocalOutput'] = o
+			end
+
+			opts.on("-c", "-c <filename>", "Load the specified configuration file") do |c|
+				options['Config'] = c
+			end
+
+			opts.on("-m", "-m <directory>", "Specifies an additional module search path") do |m|
+				options['ModulePath'] = m
+			end
+
+			opts.on("-p", "-p <plugin>", "Load a plugin on startup") do |p|
+				options['Plugins'] ||= []
+				options['Plugins'] << p
+			end
+
+			opts.on("-y", "--yaml <database.yml>", "Specify a YAML file containing database settings") do |m|
+				options['DatabaseYAML'] = m
+			end
+
+			opts.on("-e", "--environment <production|development>", "Specify the database environment to load from the YAML") do |m|
+				options['DatabaseEnv'] = m
+			end
+
+			# Boolean switches
+			opts.on("-v", "--version", "Show version") do |v|
+				options['Version'] = true
+			end
+
+			opts.on("-L", "--real-readline", "Use the system Readline library instead of RbReadline") do |v|
+				options['RealReadline'] = true
+			end
+
+			opts.on("-n", "--no-database", "Disable database support") do |v|
+				options['DisableDatabase'] = true
+			end
+
+			opts.on("-q", "--quiet", "Do not print the banner on start up") do |v|
+				options['DisableBanner'] = true
+			end
+
+=end
+#
+###
+
+
+#
+# Did we get a module specified?
+#
+modname = nil
+if ARGV.length > 0
+	modname = ARGV.shift
+end
+
+
+###
+#
+# Code to report errors and list modules of certain types
+#
+=begin
+
+if ($framework.modules.failed.length > 0)
+  print("Warning: The following modules could not be loaded!\n\n")
+  $framework.modules.failed.each_pair do |file, err|
+    print("\t#{file}: #{err}\n\n")
+  end
+end
+
+
+if (not exploit_name)
+	ext = ''
+
+	# CODE TO LIST EXPLOITS
+	tbl = Rex::Ui::Text::Table.new(
+		'Header'  => 'Exploits',
+		'Indent'  => 4,
+		'Columns' => [ 'Name', 'Description' ])
+
+	$framework.exploits.each_module { |name, mod|
+		tbl << [  'exploit/' + name, mod.new.name ]
+	}
+	ext << tbl.to_s + "\n"
+
+	# CODE TO LIST AUXILIARY
+	tbl = Rex::Ui::Text::Table.new(
+		'Header'  => 'Auxiliary',
+		'Indent'  => 4,
+		'Columns' => [ 'Name', 'Description' ])
+
+	$framework.auxiliary.each_module { |name, mod|
+		tbl << [ 'auxiliary/' + name, mod.new.name ]
+	}
+
+	ext << tbl.to_s + "\n"
+
+	usage(nil, ext)
+end
+
+=end
+#
+###
+
+
+
+#$stderr.puts "[*] Loading core ..."
+#require 'msf/core'
+$stderr.puts "[*] Loading the Metasploit Framework base ..."
+require 'msf/base'
+
+# Initialize the simplified framework instance.
+$stderr.puts "[*] Initializing a Framework instance..."
+$framework = Msf::Simple::Framework.create(
+	:module_types => [
+		# Don't load anything by default...
+		#Msf::MODULE_PAYLOAD,
+		#Msf::MODULE_ENCODER,
+		#Msf::MODULE_NOP
+	],
+	# No database support here..
+	'DisableDatabase' => true
+)
+
+
+# Process special var/val pairs...
+require 'msf/ui'
+Msf::Ui::Common.process_cli_arguments($framework, ARGV)
+
+
+$stderr.puts "[*] Initializing modules ..."
+
+# Initialize the module sets manually
+mm = $framework.modules
+mm.init_module_set('nop')
+mm.init_module_set('encoder')
+mm.init_module_set('payload')
+mm.init_module_set('exploit')
+mm.init_module_set('auxiliary')
+mm.init_module_set('post')
+
+
+def load_mod(mm, modname)
+	parts = modname.split('/')
+	type = parts.shift
+	rest = parts.join('/')
+	mm.init_module_set(type) if not mm.module_set(type)
+
+	if not mm.demand_load_module(modname, false)
+		$stderr.puts "[-] Unable to load module #{type}: \"#{modname}\""
+		exit(1)
+	end
+
+	if not (mod = mm.create(modname))
+		$stderr.puts "[-] Unable to create instance of #{type} / #{modname}"
+		exit(1)
+	end
+
+	mod
+end
+
+
+def load_from_opts(mm, options, default)
+	type = default.split('/').first
+	mm.init_module_set(type) if not mm.module_set(type)
+
+	if options[type]
+		val = options[type]
+		if val.split('/').first != type
+			val = [type, val].join('/')
+		end
+	else
+		val = default
+	end
+
+	load_mod(mm, val)
+end
+
+
+nop = load_from_opts(mm, options, 'nop/x86/single_byte')
+#payload = load_from_opts(mm, options, 'payload/bsd/x86/shell_reverse_tcp')
+payload = load_from_opts(mm, options, 'payload/windows/meterpreter/reverse_tcp')
+encoder = load_from_opts(mm, options, 'encoder/x86/shikata_ga_nai')
+
+mod = load_mod(mm, modname)
+
+
+#
+# Fire up the interface, initialize the environment, and go go go
+#
+$stderr.puts "[*] Loading UI ..."
+require 'msf/ui'
+
+# Import options
+mods = [
+	"PAYLOAD=#{payload.refname}",
+	"NOP=#{nop.refname}",
+	"ENCODER=#{encoder.refname}",
+]
+args = ARGV + mods
+
+vars = Msf::Ui::Common.process_cli_arguments($framework, args)
+
+mod.datastore.import_options_from_s(args.join('_|_'), '_|_')
+
+# Initialize associated modules
+payload.datastore.import_options_from_s(args.join('_|_'), '_|_')
+encoder.datastore.import_options_from_s(args.join('_|_'), '_|_')
+nop.datastore.import_options_from_s(args.join('_|_'), '_|_')
+
+
+$stderr.puts "[*] Starting the console..."
+options.merge!(
+	'RealReadline' => true,
+	'DisableDatabase' => true,
+	'Framework' => $framework,
+	'DisableBanner' => true
+)
+
+begin
+	con = Msf::Ui::Console::Driver.new(
+		Msf::Ui::Console::Driver::DefaultPrompt,
+		Msf::Ui::Console::Driver::DefaultPromptChar,
+		options
+	)
+
+	# Execute the "exploit" mode commands
+	modname = "#{mod.type}/#{mod.refname}"
+	con.run_single("use #{modname}")
+
+	args.each do |arg|
+		k,v = arg.split("=", 2)
+		con.run_single("set #{k} #{v}")
+	end
+
+	con.run_single("exploit")
+
+	# If we have sessions or jobs, keep running
+	if $framework.sessions.length > 0 or $framework.jobs.length > 0
+		con.run
+	else
+		con.run_single("quit")
+	end
+
+rescue Interrupt
+end
