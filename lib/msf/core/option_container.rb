@@ -81,6 +81,13 @@ class OptBase
 	end
 
 	#
+	# Returns a string representing a user-friendly display of the chosen value
+	#
+	def display_value(value)
+		value.to_s
+	end
+	
+	#
 	# The name of the option.
 	#
 	attr_reader   :name
@@ -136,6 +143,7 @@ end
 # OptEnum    - Select from a set of valid values
 # OptAddressRange - A subnet or range of addresses
 # OptSession - A session identifier
+# OptRegexp  - Valid Ruby regular expression
 #
 ###
 
@@ -439,6 +447,44 @@ class OptInt < OptBase
 	end
 end
 
+###
+#
+# Regexp option
+#
+###
+class OptRegexp < OptBase
+	def type
+		return 'regexp'
+	end
+
+	def valid?(value)
+		unless super
+			return false
+		end
+
+		begin
+			Regexp.compile(value)
+
+			return true
+		rescue RegexpError => e
+			return false
+		end
+	end
+
+	def normalize(value)
+		return Regexp.compile(value)
+	end
+
+	def display_value(value)
+		if value.kind_of?(Regexp)
+			return value.source
+		elsif value.kind_of?(String)
+			return display_value(normalize(value))
+		end
+
+		return super
+	end
+end
 
 ###
 #
