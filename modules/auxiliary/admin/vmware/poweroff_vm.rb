@@ -5,13 +5,12 @@
 ##
 # This file is part of the Metasploit Framework and may be subject to
 # redistribution and commercial restrictions. Please see the Metasploit
-# Framework web site for more information on licensing and terms of use.
-# http://metasploit.com/framework/
+# web site for more information on licensing and terms of use.
+#   http://metasploit.com/
 ##
 
 
 require 'msf/core'
-require 'msf/core/exploit/vim_soap'
 
 
 class Metasploit3 < Msf::Auxiliary
@@ -42,10 +41,10 @@ class Metasploit3 < Msf::Auxiliary
 	def run
 		if vim_do_login(datastore['USERNAME'], datastore['PASSWORD']) == :success
 			vm_ref = vim_find_vm_by_name(datastore['VM'])
-			case vm_ref 
+			case vm_ref
 			when String
 				return_state = vim_powerOFF_vm(vm_ref)
-				case return_state 
+				case return_state
 				when 'success'
 					print_good "VM Powered Off Successfully"
 				when 'alreadyOFF'
