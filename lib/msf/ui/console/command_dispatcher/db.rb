@@ -160,6 +160,7 @@ class Db
 			delete_count = 0
 
 			host_ranges = []
+			search_term = nil
 
 			output = nil
 			default_columns = ::Msf::DBManager::Host.column_names.sort
@@ -195,6 +196,8 @@ class Db
 				when '-R','--rhosts'
 					set_rhosts = true
 					rhosts = []
+				when '-S', '--search'
+					search_term = /#{args.shift}/nmi
 
 				when '-h','--help'
 					print_line "Usage: hosts [ options ] [addr1 addr2 ...]"
@@ -207,6 +210,7 @@ class Db
 					print_line "  -u,--up           Only show hosts which are up"
 					print_line "  -o <file>         Send output to a file in csv format"
 					print_line "  -R,--rhosts       Set RHOSTS from the results of the search"
+					print_line "  -S,--search       Search string to filter by"
 					print_line
 					print_line "Available columns: #{default_columns.join(", ")}"
 					print_line
@@ -232,7 +236,7 @@ class Db
 						print_status("Time: #{host.created_at} Host: host=#{host.address}")
 						if set_rhosts
 							# only unique addresses
-							addr = (host.scope ? host.address + '%' + host.scope : host.address ) 
+							addr = (host.scope ? host.address + '%' + host.scope : host.address )
 							rhosts << addr unless rhosts.include?(addr)
 						end
 					end
@@ -253,6 +257,9 @@ class Db
 
 			each_host_range_chunk(host_ranges) do |host_search|
 				framework.db.hosts(framework.db.workspace, onlyup, host_search).each do |host|
+					if search_term
+						next unless host.attribute_names.any? { |a| host[a.intern].to_s.match(search_term) }
+					end
 					columns = col_names.map do |n|
 						# Deal with the special cases
 						if virtual_columns.include?(n)
@@ -269,7 +276,7 @@ class Db
 
 					tbl << columns
 					if set_rhosts
-						addr = (host.scope ? host.address + '%' + host.scope : host.address ) 
+						addr = (host.scope ? host.address + '%' + host.scope : host.address )
 						rhosts << addr unless rhosts.include?(addr)
 					end
 					if mode == :delete
@@ -314,6 +321,7 @@ class Db
 			host_ranges = []
 			port_ranges = []
 			delete_count = 0
+			search_term = nil
 
 			# option parsing
 			while (arg = args.shift)
@@ -365,6 +373,8 @@ class Db
 				when '-R','--rhosts'
 					set_rhosts = true
 					rhosts = []
+				when '-S', '--search'
+					search_term = /#{args.shift}/nmi
 
 				when '-h','--help'
 					print_line
@@ -380,6 +390,7 @@ class Db
 					print_line "  -u,--up           Only show services which are up"
 					print_line "  -o <file>         Send output to a file in csv format"
 					print_line "  -R,--rhosts       Set RHOSTS from the results of the search"
+					print_line "  -S,--search       Search string to filter by"
 					print_line
 					print_line "Available columns: #{default_columns.join(", ")}"
 					print_line
@@ -438,13 +449,20 @@ class Db
 				framework.db.services(framework.db.workspace, onlyup, proto, host_search, ports, names).each do |service|
 
 					host = service.host
+					if search_term
+						next unless(
+							host.attribute_names.any? { |a| host[a.intern].to_s.match(search_term)} or
+							service.attribute_names.any? { |a| service[a.intern].to_s.match(search_term)}
+						)
+					end
+
 					columns = [host.address] + col_names.map { |n| service[n].to_s || "" }
 					tbl << columns
 					if set_rhosts
-						addr = (host.scope ? host.address + '%' + host.scope : host.address ) 
+						addr = (host.scope ? host.address + '%' + host.scope : host.address )
 						rhosts << addr unless rhosts.include?(addr)
 					end
-					
+
 					if (mode == :delete)
 						service.destroy
 						delete_count += 1
@@ -477,6 +495,7 @@ class Db
 			print_line "  -h,--help             Show this help information"
 			print_line "  -p,--port <portspec>  List vulns matching this port spec"
 			print_line "  -s <svc names>        List vulns matching these service names"
+			print_line "  -S,--search           Search string to filter by"
 			print_line
 			print_line "Examples:"
 			print_line "  vulns -p 1-65536          # only vulns with associated services"
@@ -491,6 +510,7 @@ class Db
 			host_ranges = []
 			port_ranges = []
 			svcs        = []
+			search_term = nil
 
 			# Short-circuit help
 			if args.delete "-h"
@@ -519,6 +539,8 @@ class Db
 						return
 					end
 					svcs = service.split(/[\s]*,[\s]*/)
+				when '-S', '--search'
+					search_term = /#{args.shift}/nmi
 				else
 					# Anything that wasn't an option is a host to search for
 					unless (arg_host_range(arg, host_ranges))
@@ -535,6 +557,12 @@ class Db
 			each_host_range_chunk(host_ranges) do |host_search|
 				framework.db.hosts(framework.db.workspace, false, host_search).each do |host|
 					host.vulns.each do |vuln|
+						if search_term
+							next unless(
+								vuln.host.attribute_names.any? { |a| vuln.host[a.intern].to_s.match(search_term) } or
+								vuln.attribute_names.any? { |a| vuln[a.intern].to_s.match(search_term) }
+							)
+						end
 						reflist = vuln.refs.map { |r| r.name }
 						if(vuln.service)
 							# Skip this one if the user specified a port and it
@@ -568,6 +596,7 @@ class Db
 			print_line "  -u,--user             Add a cred for this user (only with -a). Default: blank"
 			print_line "  -P,--password         Add a cred with this password (only with -a). Default: blank"
 			print_line "  -R,--rhosts           Set RHOSTS from the results of the search"
+			print_line "  -S,--search           Search string to filter by"
 			print_line
 			print_line "Examples:"
 			print_line "  creds               # Default, returns all active credentials"
@@ -595,6 +624,7 @@ class Db
 			host_ranges = []
 			port_ranges = []
 			svcs        = []
+			search_term = nil
 
 			user = nil
 
@@ -647,6 +677,8 @@ class Db
 				when "-R"
 					set_rhosts = true
 					rhosts = []
+				when '-S', '--search'
+					search_term = /#{args.shift}/nmi
 				when "-u","--user"
 					user = args.shift
 					if (!user)
@@ -707,7 +739,9 @@ class Db
 			framework.db.each_cred(framework.db.workspace) do |cred|
 				# skip if it's inactive and user didn't ask for all
 				next unless (cred.active or inactive_ok)
-
+				if search_term
+					next unless cred.attribute_names.any? { |a| cred[a.intern].to_s.match(search_term) }
+				end
 				# Also skip if the user is searching for something and this
 				# one doesn't match
 				includes = false
@@ -736,7 +770,7 @@ class Db
 					cred.destroy
 				end
 				if set_rhosts
-					addr = (cred.service.host.scope ? cred.service.host.address + '%' + cred.service.host.scope : cred.service.host.address ) 
+					addr = (cred.service.host.scope ? cred.service.host.address + '%' + cred.service.host.scope : cred.service.host.address )
 					rhosts << addr unless rhosts.include?(addr)
 				end
 				creds_returned += 1
@@ -764,6 +798,7 @@ class Db
 			print_line "  -t <type1,type2>  Search for a list of types"
 			print_line "  -h,--help         Show this help information"
 			print_line "  -R,--rhosts       Set RHOSTS from the results of the search"
+			print_line "  -S,--search       Search string to filter by"
 			print_line
 			print_line "Examples:"
 			print_line "  notes --add -t apps -n 'winzip' 10.1.1.34 10.1.20.41"
@@ -779,6 +814,7 @@ class Db
 			set_rhosts = false
 
 			host_ranges = []
+			search_term = nil
 
 			while (arg = args.shift)
 				case arg
@@ -802,6 +838,8 @@ class Db
 				when '-R','--rhosts'
 					set_rhosts = true
 					rhosts = []
+				when '-S', '--search'
+					search_term = /#{args.shift}/nmi
 				when '-h','--help'
 					cmd_notes_help
 					return
@@ -835,12 +873,17 @@ class Db
 			note_list = []
 			delete_count = 0
 			if host_ranges.empty? # No host specified - collect all notes
-				note_list = framework.db.notes
+				note_list = framework.db.notes.dup
 			else # Collect notes of specified hosts
 				each_host_range_chunk(host_ranges) do |host_search|
 					framework.db.hosts(framework.db.workspace, false, host_search).each do |host|
 						note_list.concat(host.notes)
 					end
+				end
+			end
+			if search_term
+				note_list.delete_if do |n|
+					!!n.attribute_names.any? { |a| n[a.intern].to_s.match(search_term) }
 				end
 			end
 			# Now display them
@@ -851,7 +894,7 @@ class Db
 					host = note.host
 					msg << " host=#{note.host.address}"
 					if set_rhosts
-						addr = (host.scope ? host.address + '%' + host.scope : host.address ) 
+						addr = (host.scope ? host.address + '%' + host.scope : host.address )
 						rhosts << addr unless rhosts.include?(addr)
 					end
 				end
@@ -879,6 +922,7 @@ class Db
 			print_line
 			print_line "  -t <type1,type2>  Search for a list of types"
 			print_line "  -h,--help         Show this help information"
+			print_line "  -S,--search       Search string to filter by"
 			print_line
 		end
 
@@ -888,6 +932,7 @@ class Db
 			host_ranges = []
 			types = nil
 			delete_count = 0
+			search_term = nil
 
 			while (arg = args.shift)
 				case arg
@@ -900,6 +945,8 @@ class Db
 						return
 					end
 					types = typelist.strip().split(",")
+				when '-S', '--search'
+					search_term = /#{args.shift}/nmi
 				when '-h','--help'
 					cmd_loot_help
 					return
@@ -923,6 +970,12 @@ class Db
 				framework.db.hosts(framework.db.workspace, false, host_search).each do |host|
 					host.loots.each do |loot|
 						next if(types and types.index(loot.ltype).nil?)
+						if search_term
+						next unless(
+							loot.attribute_names.any? { |a| loot[a.intern].to_s.match(search_term) } or
+							loot.host.attribute_names.any? { |a| loot.host[a.intern].to_s.match(search_term) }
+						)
+						end
 						row = []
 						row.push( (loot.host ? loot.host.address : "") )
 						if (loot.service)
