@@ -5195,6 +5195,7 @@ class DBManager
 					refs = []
 					qid = vuln.attributes['number']
 					severity = vuln.attributes['severity']
+					title = vuln.elements['TITLE'].text.to_s
 					vuln.elements.each('VENDOR_REFERENCE_LIST/VENDOR_REFERENCE') do |ref|
 						refs.push(ref.elements['ID'].text.to_s)
 					end
@@ -5205,7 +5206,7 @@ class DBManager
 						refs.push('BID-' + ref.elements['ID'].text.to_s)
 					end
 
-					handle_qualys(wspace, hobj, port, protocol, qid, severity, refs)
+					handle_qualys(wspace, hobj, port, protocol, qid, severity, refs, nil,title)
 				end
 			end
 		end
@@ -5618,7 +5619,7 @@ protected
 	#
 	# Qualys report parsing/handling
 	#
-	def handle_qualys(wspace, hobj, port, protocol, qid, severity, refs, name=nil)
+	def handle_qualys(wspace, hobj, port, protocol, qid, severity, refs, name=nil, title=nil)
 		addr = hobj.address
 		port = port.to_i if port
 
@@ -5644,14 +5645,14 @@ protected
 		end
 
 		return if qid == 0
-
+		title = 'QUALYS-' + qid if title.nil? or title.empty?
 		if addr
 			report_vuln(
 				:workspace => wspace,
 				:host => hobj,
 				:port => port,
 				:proto => protocol,
-				:name => 'QUALYS-' + qid,
+				:name =>  title,
 				:refs => fixed_refs
 			)
 		end
