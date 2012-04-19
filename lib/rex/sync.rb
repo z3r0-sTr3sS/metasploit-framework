@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 module Rex
 	autoload :ReadWriteLock, 'rex/sync/read_write_lock'
 	autoload :ThreadSafe,    'rex/sync/thread_safe'

@@ -10,5 +10,5 @@ require 'rex/post/process'
 require 'rex/post/thread'
 
 # Post-exploitation clients
+require 'rex/post/dispatch_ninja'
 require 'rex/post/meterpreter'
-

@@ -1,8 +1,4 @@
-##
-# $Id: $
-#
-# maps autoload for logging classes
-##
+#!/usr/bin/env ruby
 
 require 'rex/constants' # for LEV_'s
 
