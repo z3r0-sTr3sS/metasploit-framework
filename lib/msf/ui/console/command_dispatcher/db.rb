@@ -78,6 +78,7 @@ class Db
 
 		def cmd_workspace(*args)
 			return unless active?
+		::ActiveRecord::Base.connection_pool.with_connection {
 			while (arg = args.shift)
 				case arg
 				when '-h','--help'
@@ -164,6 +165,7 @@ class Db
 					print_line("#{pad}#{s.name}")
 				end
 			end
+		}
 		end
 
 		def cmd_workspace_tabs(str, words)
@@ -181,6 +183,7 @@ class Db
 
 		def cmd_hosts(*args)
 			return unless active?
+		::ActiveRecord::Base.connection_pool.with_connection {
 			onlyup = false
 			host_search = nil
 			set_rhosts = false
@@ -328,6 +331,7 @@ class Db
 			# of hosts to go into RHOSTS.
 			set_rhosts_from_addrs(rhosts) if set_rhosts
 			print_status("Deleted #{delete_count} hosts") if delete_count > 0
+		}
 		end
 
 		def cmd_services_help
@@ -338,6 +342,7 @@ class Db
 
 		def cmd_services(*args)
 			return unless active?
+		::ActiveRecord::Base.connection_pool.with_connection {
 			mode = :search
 			onlyup = false
 			output_file = nil
@@ -512,6 +517,7 @@ class Db
 			set_rhosts_from_addrs(rhosts) if set_rhosts
 			print_status("Deleted #{delete_count} services") if delete_count > 0
 
+		}
 		end
 
 
@@ -535,6 +541,7 @@ class Db
 
 		def cmd_vulns(*args)
 			return unless active?
+		::ActiveRecord::Base.connection_pool.with_connection {
 
 			host_ranges = []
 			port_ranges = []
@@ -612,6 +619,7 @@ class Db
 					end
 				end
 			end
+		}
 		end
 
 
@@ -646,6 +654,7 @@ class Db
 		#
 		def cmd_creds(*args)
 			return unless active?
+		::ActiveRecord::Base.connection_pool.with_connection {
 
 			search_param = nil
 			inactive_ok = false
@@ -820,6 +829,7 @@ class Db
 
 			set_rhosts_from_addrs(rhosts) if set_rhosts
 			print_status "Found #{creds_returned} credential#{creds_returned == 1 ? "" : "s"}."
+		}
 		end
 
 		def cmd_notes_help
@@ -841,6 +851,7 @@ class Db
 
 		def cmd_notes(*args)
 			return unless active?
+		::ActiveRecord::Base.connection_pool.with_connection {
 			mode = :search
 			data = nil
 			types = nil
@@ -948,6 +959,7 @@ class Db
 			set_rhosts_from_addrs(rhosts) if set_rhosts
 
 			print_status("Deleted #{delete_count} note#{delete_count == 1 ? "" : "s"}") if delete_count > 0
+		}
 		end
 
 		def cmd_loot_help
@@ -961,6 +973,7 @@ class Db
 
 		def cmd_loot(*args)
 			return unless active?
+		::ActiveRecord::Base.connection_pool.with_connection {
 			mode = :search
 			host_ranges = []
 			types = nil
@@ -1055,6 +1068,7 @@ class Db
 			print_line
 			print_line tbl.to_s
 			print_status "Deleted #{delete_count} loots" if delete_count > 0
+		}
 		end
 
 
@@ -1104,6 +1118,7 @@ class Db
 		#
 		def cmd_db_import(*args)
 			return unless active?
+		::ActiveRecord::Base.connection_pool.with_connection {
 			if (args.include?("-h") or not (args and args.length > 0))
 				cmd_db_import_help
 				return
@@ -1174,6 +1189,7 @@ class Db
 					end
 				}
 			}
+		}
 		end
 
 		def cmd_db_export_help
@@ -1187,6 +1203,7 @@ class Db
 		#
 		def cmd_db_export(*args)
 			return unless active?
+		::ActiveRecord::Base.connection_pool.with_connection {
 
 			export_formats = %W{xml pwdump}
 			format = 'xml'
@@ -1230,6 +1247,7 @@ class Db
 				end
 			end
 			print_status("Finished export of workspace #{framework.db.workspace.name} to #{output} [ #{format} ]...")
+		}
 		end
 
 		#
@@ -1237,6 +1255,7 @@ class Db
 		#
 		def cmd_db_nmap(*args)
 			return unless active?
+		::ActiveRecord::Base.connection_pool.with_connection {
 			if (args.length == 0)
 				print_status("Usage: db_nmap [nmap options]")
 				return
@@ -1306,6 +1325,7 @@ class Db
 				print_status "Saved NMAP XML results to #{saved_path}"
 			end
 			fd.close(true)
+		}
 		end
 
 
@@ -1332,10 +1352,13 @@ class Db
 		#
 		def cmd_db_status(*args)
 			return if not db_check_driver
-			if ActiveRecord::Base.connected? and ActiveRecord::Base.connection.active?
-				if ActiveRecord::Base.connection.respond_to? :current_database
-					cdb = ActiveRecord::Base.connection.current_database
-				end
+			if ::ActiveRecord::Base.connected?
+				cdb = ""
+				::ActiveRecord::Base.connection_pool.with_connection { |conn|
+					if conn.respond_to? :current_database
+						cdb = conn.current_database
+					end
+				}
 				print_status("#{framework.db.driver} connected to #{cdb}")
 			else
 				print_status("#{framework.db.driver} selected, no connection")
