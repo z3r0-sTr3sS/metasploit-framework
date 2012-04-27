@@ -1,4 +1,4 @@
-require "active_record"
+#require "active_record"
 
 require 'msf/core'
 require 'msf/core/db'
@@ -6,13 +6,11 @@ require 'msf/core/task_manager'
 require 'fileutils'
 
 # Provide access to ActiveRecord models shared w/ commercial versions
-require "metasploit_data_models"
+#require "metasploit_data_models"
 
 # Patches issues with ActiveRecord
-require "msf/core/patches/active_record"
+#require "msf/core/patches/active_record"
 
-
-require 'fileutils'
 
 module Msf
 
@@ -36,7 +34,7 @@ class DBManager
 	end
 
 	begin
-		include MetasploitDataModels
+		#include MetasploitDataModels
 	rescue NameError => e
 		warn_about_rubies
 		raise e
