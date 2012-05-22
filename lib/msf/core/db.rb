@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 autoload :FileUtils, 'fileutils'
 autoload :Zip,       'zip'
@@ -2410,6 +2411,12 @@ class DBManager
 		elsif (firstline.index("<scanJob>"))
 			@import_filedata[:type] = "Retina XML"
 			return :retina_xml
+		elsif (firstline.index("<get_reports_response status=\"200\" status_text=\"OK\">"))
+			@import_filedata[:type] = "OpenVAS XML"
+			return :openvas_new_xml
+		elsif (firstline.index("<report id=\""))
+			@import_filedata[:type] = "OpenVAS XML"
+			return :openvas_new_xml
 		elsif (firstline.index("<NessusClientData>"))
 			@import_filedata[:type] = "Nessus XML (v1)"
 			return :nessus_xml
@@ -2424,6 +2431,7 @@ class DBManager
 			line_count = 0
 			data.each_line { |line|
 				line =~ /<([a-zA-Z0-9\-\_]+)[ >]/
+
 				case $1
 				when "niktoscan"
 					@import_filedata[:type] = "Nikto XML"
@@ -2443,6 +2451,9 @@ class DBManager
 				when "SCAN"
 					@import_filedata[:type] = "Qualys Scan XML"
 					return :qualys_scan_xml
+				when "report"
+					@import_filedata[:type] = "Wapiti XML"
+					return :wapiti_xml
 				when "ASSET_DATA_REPORT"
 					@import_filedata[:type] = "Qualys Asset XML"
 					return :qualys_asset_xml
@@ -2573,6 +2584,48 @@ class DBManager
 				end
 			end
 		end
+	end
+
+	def import_wapiti_xml_file(args={})
+		filename = args[:filename]
+		wspace = args[:wspace] || workspace
+
+		data = ""
+		::File.open(filename, 'rb') do |f|
+			data = f.read(f.stat.size)
+    		end
+		import_wapiti_xml(args.merge(:data => data))
+	end
+
+	def import_wapiti_xml(args={}, &block)
+		if block
+			doc = Rex::Parser::WapitiDocument.new(args,framework.db) {|type, data| yield type,data }
+		else
+			doc = Rex::Parser::WapitiDocument.new(args,self)
+		end
+		parser = ::Nokogiri::XML::SAX::Parser.new(doc)
+		parser.parse(args[:data])
+	end
+
+	def import_openvas_new_xml_file(args={})
+		filename = args[:filename]
+		wspace = args[:wspace] || workspace
+
+		data = ""
+		::File.open(filename, 'rb') do |f|
+			data = f.read(f.stat.size)
+		end
+		import_wapiti_xml(args.merge(:data => data))
+	end
+
+	def import_openvas_new_xml(args={}, &block)
+		if block
+			doc = Rex::Parser::OpenVASDocument.new(args,framework.db) {|type, data| yield type,data }
+		else
+			doc = Rex::Parser::OpenVASDocument.new(args,self)
+		end
+		parser = ::Nokogiri::XML::SAX::Parser.new(doc)
+		parser.parse(args[:data])
 	end
 
 	def import_libpcap_file(args={})
