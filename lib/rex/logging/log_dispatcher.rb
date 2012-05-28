@@ -7,7 +7,7 @@ module Logging
 #
 # The log dispatcher associates log sources with log sinks.  A log source
 # is a unique identity that is associated with one and only one log sink.
-# For instance, the framework-core registers the 'core' 
+# For instance, the framework-core registers the 'core'
 #
 ###
 class LogDispatcher
@@ -54,7 +54,7 @@ class LogDispatcher
 				set_log_level(src, level) if (log_levels[src] == nil)
 			else
 				raise(
-					RuntimeError, 
+					RuntimeError,
 					"The supplied log source #{src} is already registered.",
 					caller)
 			end
@@ -69,7 +69,7 @@ class LogDispatcher
 
 		log_sinks_lock.synchronize {
 			sink = log_sinks[src]
-			
+
 			log_sinks.delete(src)
 		}
 
