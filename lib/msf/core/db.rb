@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-
 autoload :FileUtils, 'fileutils'
 autoload :Zip,       'zip'
 autoload :URI,       'uri'
