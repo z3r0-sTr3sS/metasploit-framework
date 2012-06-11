@@ -3,6 +3,12 @@ autoload :Zip,       'zip'
 autoload :URI,       'uri'
 autoload :PacketFu,  'packetfu'
 
+# Rex::Parser importers have been moved to lib/rex/parsers.rb in this branch.
+
+require 'rex/socket'
+require 'zip'
+require 'packetfu'
+require 'uri'
 require 'tmpdir'
 require 'csv'
 
@@ -2400,6 +2406,9 @@ class DBManager
 		if (firstline.index("<NeXposeSimpleXML"))
 			@import_filedata[:type] = "NeXpose Simple XML"
 			return :nexpose_simplexml
+		elsif (firstline.index("<FusionVM"))
+			@import_filedata[:type] = "FusionVM XML"
+			return :fusionvm_xml
 		elsif (firstline.index("<NexposeReport"))
 			@import_filedata[:type] = "NeXpose XML Report"
 			return :nexpose_rawxml
@@ -4313,6 +4322,15 @@ class DBManager
 
 		res
 	end
+
+	def import_fusionvm_xml(args={})
+		args[:wspace] ||= workspace
+		bl = validate_ips(args[:blacklist]) ? args[:blacklist].split : []
+		doc = Rex::Parser::FusionVMDocument.new(args,self)
+		parser = ::Nokogiri::XML::SAX::Parser.new(doc)
+		parser.parse(args[:data])
+	end
+
 
 	#
 	# Import Nmap's -oX xml output
