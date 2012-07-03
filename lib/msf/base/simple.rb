@@ -1,3 +1,4 @@
+# -*- coding: binary -*-
 module Msf::Simple
 	# Buffer management
 	autoload :Buffer,     'msf/base/simple/buffer'

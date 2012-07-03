@@ -1,3 +1,5 @@
+# -*- coding: binary -*-
+require 'rex/socket'
 require 'thread'
 
 module Msf

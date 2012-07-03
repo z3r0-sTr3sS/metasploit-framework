@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# -*- coding: binary -*-
 
 module Rex
 	autoload :ReadWriteLock, 'rex/sync/read_write_lock'

@@ -1,8 +1,9 @@
-##
-# $Id$
+# -*- coding: binary -*-
+
 #
 # This file maps Proto items for autoload
-##
+#
+
 require 'rex/proto/iax2'
 
 module Rex

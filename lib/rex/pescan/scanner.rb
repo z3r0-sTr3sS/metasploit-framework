@@ -1,3 +1,6 @@
+# -*- coding: binary -*-
+require 'metasm'
+
 module Rex
 module PeScan
 module Scanner

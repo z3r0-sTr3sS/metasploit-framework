@@ -1,3 +1,4 @@
+# -*- coding: binary -*-
 # These are required by all uses of Rex::Proto::Http
 require 'rex/proto/http/packet'
 require 'rex/proto/http/request'

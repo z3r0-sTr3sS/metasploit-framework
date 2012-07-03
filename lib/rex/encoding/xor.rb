@@ -1,3 +1,10 @@
+#!/usr/bin/env ruby
+# -*- coding: binary -*-
+
+#
+# make sure the namespace is created
+#
+
 module Rex
 module Encoding
 module Xor

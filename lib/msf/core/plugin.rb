@@ -1,4 +1,5 @@
-#require 'rex/sync/ref'
+# -*- coding: binary -*-
+require 'rex/sync/ref'
 
 module Msf
 
