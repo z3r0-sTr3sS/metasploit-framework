@@ -360,7 +360,11 @@ class DBManager
 				next if skipped.include?( [ mt[0], mn ] )
 				obj   = mt[1].create(mn)
 				next if not obj
-				update_module_details(obj)		
+				begin
+					update_module_details(obj)
+				rescue ::Exception
+					elog("Error updating module details for #{obj.fullname}: #{$!.class} #{$!}")
+				end
 			end
 		end
 
@@ -576,7 +580,7 @@ class DBManager
 			end
 		end
 		
-		res = Mdm::ModuleDetail.select("DISTINCT(module_details.*)").
+		qry = Mdm::ModuleDetail.select("DISTINCT(module_details.*)").
 			joins(
 				"LEFT OUTER JOIN module_authors   ON module_details.id = module_authors.module_detail_id " +
 				"LEFT OUTER JOIN module_actions   ON module_details.id = module_actions.module_detail_id " +
@@ -586,8 +590,11 @@ class DBManager
 				"LEFT OUTER JOIN module_platforms ON module_details.id = module_platforms.module_detail_id "
 			).
 			where(where_q.join(inclusive ? " OR " : " AND "), *(where_v.flatten)).
-			group("module_details.id").
-			all
+			# Compatibility for Postgres installations prior to 9.1 - doesn't have support for wildcard group by clauses
+			group("module_details.id, module_details.mtime, module_details.file, module_details.mtype, module_details.refname, module_details.fullname, module_details.name, module_details.rank, module_details.description, module_details.license, module_details.privileged, module_details.disclosure_date, module_details.default_target, module_details.default_action, module_details.stance, module_details.ready")
+
+		res = qry.all
+
 		}
 	end
 
