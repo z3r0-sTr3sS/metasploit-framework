@@ -88,6 +88,9 @@ module Rex
 	# Protocols
 	autoload :Proto, 'rex/proto'
 
+	# OUI
+	autoload :Oui, 'rex/mac_oui'
+
 	# Service handling
 	autoload :Service, 'rex/service'
 	autoload :ServiceManager, 'rex/service_manager'
