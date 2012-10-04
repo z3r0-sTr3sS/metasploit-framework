@@ -41,6 +41,8 @@ class Metasploit3 < Msf::Post
 	end
 
 	def run
+		print_error "Warning: This module will soon be deprecated"
+		print_error "         by exploit/windows/local/bypassuac"
 
 		vuln = false
 		sysinfo = session.sys.config.sysinfo
