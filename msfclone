@@ -1,0 +1,104 @@
+#!/usr/bin/env ruby
+# -*- coding: binary -*-
+# Clone Metasploit. Inspired by rvm, homebrew, etc.
+# http://mxcl.github.com/homebrew/
+# https://rvm.io
+
+unless RUBY_VERSION >= '1.9.3'
+	puts "[-] Metasploit works best with Ruby 1.9.3. While it's"
+	puts "[-] not impossible to run Metasploit on other Rubies,"
+	puts "[-] it's not recommended, either. You might want to"
+	puts "[-] try using RVM to run multiple Rubies: https://rvm.io/"
+	exit 0x10
+end
+
+require 'fileutils'
+
+def git_version
+	if ENV['GIT']
+		git_bin = ENV['GIT'] if File.executable? ENV['GIT']
+	else
+		git_bin = %x{which git}
+	end
+	return unless git_bin
+	%x{"#{git_bin.chomp}" --version}.split.last
+end
+
+def realize_path!(path=".")
+	while File.symlink?(path)
+		path = File.expand_path(File.readlink(path), File.dirname(path))
+	end
+	unless File.directory? path
+		path = File.dirname(path)
+	end
+	return File.expand_path(path)
+end
+
+def target_dir
+	if ENV['MSFBASE'] and File.directory? ENV['MSFBASE'] and File.writable? ENV['MSFBASE']
+		base = ENV['MSFBASE'] 
+		base = realize_path!(base)
+	else
+		base = __FILE__
+		base = realize_path!(base)
+		base = File.join(base, "msf3")
+	end
+	FileUtils.mkdir_p(base).first rescue nil
+end
+
+puts "[*] Checking for git..."
+case git_version
+when nil
+	puts "[-] Could not locate a git binary. Try installing one"
+	puts "[-] or pointing at one in an $GIT environment variable."
+	exit(0x20)
+when /^1\.[6789]/
+	puts "[*] Found a suitable git binary"
+else
+	puts "[-] Found a git binary, but it's not a reasonably recent version."
+	puts "[-] You can try this on your own by running"
+	puts "[-] git clone git://github.com/rapid7/metasploit-framework msf3"
+	puts "[-] but there are no guarantees. Note, it's usually easy and fun"
+	puts "[-] to install standalone git binaries from source."
+	exit(0x21)
+end
+
+puts "[*] Checking for a target directory..."
+if target_dir
+	puts "[*] Using #{target_dir}"
+else
+	puts "[-] Something went wrong with the target"
+	puts "[-] directory: #{ENV['MSFBASE'] || ENV['PWD'] || "???"}"
+	puts "[-] Maybe it's a permissions problem? Set $MSFBASE to some"
+	puts "[-] directory that you can write to and try again."
+	exit(0x30)
+end
+
+puts "[*] Cloning the very latest Metasploit source code."
+puts "[*] This is bleeding edge stuff -- you have been warned!"
+puts "[*] Press ENTER to continue, Ctrl-C (or any other key) to abort"
+ok = $stdin.getbyte # 1.9.3 only but that's okay!
+
+unless (ok == 0x0d or ok == 0x0a)
+	puts "[-] Quitting!"
+	exit(1)
+else
+	puts "[*] This might take a few minutes..."
+	puts ""
+end
+
+clone_cmd = %w{git clone git://github.com/rapid7/metasploit-framework}
+clone_cmd << target_dir
+
+res = system(*clone_cmd)
+
+if res
+	puts "[+] Looks like everything worked out! cd #{target_dir} and"
+	puts "[+] give `./msfconsole` a shot!"
+else
+	puts "[-] Ack, something horrible happened. If you could copy-paste"
+	puts "[-] your terminal buffer and mail it to todb at packetfu dot com"
+	puts "[-] that would be mighty helpful."
+end
+
+
