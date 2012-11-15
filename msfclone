@@ -97,7 +97,7 @@ if res
 	puts "[+] give `./msfconsole` a shot!"
 else
 	puts "[-] Ack, something horrible happened. If you could copy-paste"
-	puts "[-] your terminal buffer and mail it to todb at packetfu dot com"
+	puts "[-] your terminal buffer and mail it to todb at metasploit dot com"
 	puts "[-] that would be mighty helpful."
 end
 
