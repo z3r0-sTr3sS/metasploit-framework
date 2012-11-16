@@ -94,7 +94,7 @@ res = system(*clone_cmd)
 
 if res
 	puts "[+] Looks like everything worked out! cd #{target_dir} and"
-	puts "[+] give `./msfconsole` a shot!"
+	puts "[+] give `#{File.join(taget_dir, "msfconsole")}` a shot!"
 else
 	puts "[-] Ack, something horrible happened. If you could copy-paste"
 	puts "[-] your terminal buffer and mail it to todb at metasploit dot com"
