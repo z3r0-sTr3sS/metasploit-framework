@@ -18,10 +18,14 @@ def git_version
 	if ENV['GIT']
 		git_bin = ENV['GIT'] if File.executable? ENV['GIT']
 	else
-		git_bin = %x{which git}
+		if ENV['OS'] =~ /^Win/
+			git_bin = %x{for %i in (git.exe) do @echo. %~$PATH:i}
+		else
+			git_bin = %x{which git}
+		end
 	end
-	return unless git_bin
-	%x{"#{git_bin.chomp}" --version}.split.last
+	return unless git_bin.to_s =~ /git/
+	%x{"#{git_bin.strip.chomp}" --version}.split.last
 end
 
 def realize_path!(path=".")
