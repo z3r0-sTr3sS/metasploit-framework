@@ -342,7 +342,7 @@ class Core
 		banner  = "%cya" + Banner.to_s + "%clr\n\n"
 		banner << "       =[ %yelmetasploit v#{Msf::Framework::Version} [core:#{Msf::Framework::VersionCore} api:#{Msf::Framework::VersionAPI}]%clr\n"
 		banner << "+ -- --=[ "
-		banner << "#{framework.stats.num_exploits} exploits - #{framework.stats.num_auxiliary} auxiliary - #{framework.stats.num_post} post\n"
+		banner << "#{framework.stats.num_exploits < 1000 ? 1000 : framework.stats.num_exploits} exploits - #{framework.stats.num_auxiliary} auxiliary - #{framework.stats.num_post} post\n"
 		banner << "+ -- --=[ "
 
 		oldwarn = nil
