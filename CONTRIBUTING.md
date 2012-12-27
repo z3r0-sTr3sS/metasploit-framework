@@ -12,11 +12,16 @@ If your bug is new and you'd like to report it you will need to
 first](https://dev.metasploit.com/redmine/account/register). Don't
 worry, it's easy and fun and takes about 30 seconds.
 
+When you file a bug report, please inclue your **steps to reproduce**,
+full copy-pastes of Ruby stack traces, and any relevant details about
+your environment. Without repro steps, your bug will likely be closed.
+With repro steps, your bugs will likely be fixed.
+
 ## Contributing Metasploit Modules
 
 If you have an exploit that you'd like to contribute to the Metasploit
 Framework, please familiarize yourself with the
-[HACKING](https://github.com/rapid7/metasploit-framework/blob/master/HACKING)
+**[HACKING](https://github.com/rapid7/metasploit-framework/blob/master/HACKING)**
 document in the
 Metasploit-Framework repository. There are many mysteries revealed in
 HACKING concerning code style and content.
