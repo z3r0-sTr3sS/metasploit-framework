@@ -81,7 +81,9 @@ end
 puts "[*] Cloning the very latest Metasploit source code."
 puts "[*] This is bleeding edge stuff -- you have been warned!"
 
-unless ENV['MSFUNATTENDED']
+if ENV['MSFUNATTENDED']
+	ok = 0x0a
+else
 	puts "[*] Press ENTER to continue, Ctrl-C (or any other key) to abort"
 	ok = $stdin.getbyte # 1.9.3 only but that's okay!
 end
