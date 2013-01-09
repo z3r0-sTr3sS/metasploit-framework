@@ -110,9 +110,7 @@ else
 	puts ""
 end
 
-clone_cmd = %w{git clone}
-clone_cmd << git_url
-clone_cmd << target_dir
+clone_cmd = [git_bin, "clone", git_url, target_dir]
 
 res = system(*clone_cmd)
 
