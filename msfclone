@@ -51,7 +51,7 @@ def target_dir
 end
 
 def git_url
-	if ENV['MSFPROTOCOL'] =~ /^http/
+	if ENV['MSFPROTOCOL'] =~ /^http/i
 		handler = "https"
 	else
 		handler = "git"
