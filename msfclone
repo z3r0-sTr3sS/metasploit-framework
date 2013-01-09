@@ -50,6 +50,15 @@ def target_dir
 	FileUtils.mkdir_p(base).first rescue nil
 end
 
+def git_url
+	if ENV['MSFPROTOCOL'] =~ /^http/
+		handler = "https"
+	else
+		handler = "git"
+	end
+	"#{handler}://github.com/rapid7/metasploit-framework"
+end
+
 puts "[*] Checking for git..."
 case git_version
 when nil
@@ -78,7 +87,8 @@ else
 	exit(0x30)
 end
 
-puts "[*] Cloning the very latest Metasploit source code."
+puts "[*] Cloning the very latest Metasploit source code from"
+puts "[*] #{git_url}"
 puts "[*] This is bleeding edge stuff -- you have been warned!"
 
 if ENV['MSFUNATTENDED']
@@ -96,7 +106,8 @@ else
 	puts ""
 end
 
-clone_cmd = %w{git clone git://github.com/rapid7/metasploit-framework}
+clone_cmd = %w{git clone}
+clone_cmd << git_url
 clone_cmd << target_dir
 
 res = system(*clone_cmd)
