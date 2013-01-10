@@ -24,7 +24,7 @@ def git_bin
                         ret = %x{which git}
                 end
         end
-        ret.to_s =~ /git/ ? ret : nil
+        ret.to_s =~ /git/ ? ret.strip : nil
 end
 
 def git_version
@@ -118,9 +118,10 @@ if res
 	puts "[+] Looks like everything worked out! cd #{target_dir} and"
 	puts "[+] give `ruby #{File.join(target_dir, "msfconsole")}` a shot!"
 else
-	puts "[-] Ack, something horrible happened. If you could copy-paste"
-	puts "[-] your terminal buffer and mail it to todb at metasploit dot com"
-	puts "[-] that would be mighty helpful."
+	puts "[-] Well, that didn't work out. Please check the troubleshooting"
+	puts "[-] guide at https://gist.github.com/4393324 to try again."
+	puts "[-] If you contact todb at metasploit dot com with a copy-paste"
+	puts "[-] of your terminal buffer, that can be helpful, too."
 end
 
 
