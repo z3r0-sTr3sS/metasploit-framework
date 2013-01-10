@@ -15,21 +15,21 @@ end
 require 'fileutils'
 
 def git_bin
-        if ENV['GIT']
-                ret = ENV['GIT'] if File.executable? ENV['GIT']
-        else
-                if ENV['OS'] =~ /^Win/
-                        ret = %x{for %i in (git.exe) do @echo. %~$PATH:i}
-                else
-                        ret = %x{which git}
-                end
-        end
-        ret.to_s =~ /git/ ? ret.strip : nil
+	if ENV['GIT']
+		ret = ENV['GIT'] if File.executable? ENV['GIT']
+	else
+		if ENV['OS'] =~ /^Win/
+			ret = %x{for %i in (git.exe) do @echo. %~$PATH:i}
+		else
+			ret = %x{which git}
+		end
+	end
+	ret.to_s =~ /git/ ? ret.strip : nil
 end
 
 def git_version
-        return unless git_bin
-        %x{"#{git_bin.strip.chomp}" --version}.split.last
+	return unless git_bin
+	%x{"#{git_bin.strip.chomp}" --version}.split.last
 end
 
 def realize_path!(path=".")
