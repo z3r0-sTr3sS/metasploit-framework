@@ -1,8 +1,9 @@
 #!/usr/bin/env ruby
 
 # Check the commit history of a module or tree of modules.
-# and sort by number of commits. This might give an indicator
-# of what modules are the most popular.
+# and sort by number of commits.
+#
+# Usage: tools/module_commits.rb [module dir | module fname]
 
 require 'find'
 
