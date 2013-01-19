@@ -675,11 +675,11 @@ class DBManager
 		if sess_data[:desc]
 			sess_data[:desc] = sess_data[:desc][0,255]
 		end
-    
+
 		# In the case of multi handler we cannot yet determine the true
 		# exploit responsible. But we can at least show the parent versus
 		# just the generic handler:
-		if session.via_exploit == "exploit/multi/handler"
+		if session and session.via_exploit == "exploit/multi/handler"
 	  	sess_data[:via_exploit] = sess_data[:datastore]['ParentModule']
 		end
 
@@ -4869,6 +4869,7 @@ class DBManager
 	# If you have Nokogiri installed, you'll be shunted over to
 	# that. Otherwise, you'll hit the old NmapXMLStreamParser.
 	def import_nmap_xml(args={}, &block)
+		return nil if args[:data].nil? or args[:data].empty?
 		wspace = args[:wspace] || workspace
 		bl = validate_ips(args[:blacklist]) ? args[:blacklist].split : []
 
