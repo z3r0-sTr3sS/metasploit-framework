@@ -12,7 +12,6 @@ git_branches.each_line do |line|
 	contains_data = %x{git branch --contains #{hash}}
 	i += 1
 	if contains_data.include? "* master\n"
-		puts "#{branch} #{hash} has been merged to master, deleting from remote."
 		puts %Q{>>> git push #{remote} :#{branch}}
 		hits += 1 
 	else
@@ -20,4 +19,4 @@ git_branches.each_line do |line|
 	end
 end
 
-puts "Deleted #{hits} of #{i} stale branches."
+puts "[+] Will delete #{hits} of #{i} stale branches."
