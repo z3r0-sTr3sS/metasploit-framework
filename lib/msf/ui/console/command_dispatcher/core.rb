@@ -95,7 +95,7 @@ class Core
 
   # The list of data store elements that cannot be set when in defanged
   # mode.
-  DefangedProhibitedDataStoreElements = [ "MsfModulePaths" ]
+  DefangedProhibitedDatastoreElements = [ "MsfModulePaths" ]
 
   # Returns the list of commands supported by this command dispatcher
   def commands
@@ -1907,7 +1907,7 @@ class Core
 
     # Security check -- make sure the data store element they are setting
     # is not prohibited
-    if global and DefangedProhibitedDataStoreElements.include?(name)
+    if global and DefangedProhibitedDatastoreElements.include?(name)
       defanged?
     end
 

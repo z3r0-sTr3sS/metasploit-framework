@@ -82,7 +82,7 @@ class Framework
     self.events    = EventDispatcher.new(self)
     self.modules   = ModuleManager.new(self,types)
     self.sessions  = SessionManager.new(self)
-    self.datastore = DataStore.new
+    self.datastore = Datastore.new
     self.jobs      = Rex::JobContainer.new
     self.plugins   = PluginManager.new(self)
     self.db        = DBManager.new(self, opts)

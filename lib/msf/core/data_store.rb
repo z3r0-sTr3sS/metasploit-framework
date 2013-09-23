@@ -7,7 +7,7 @@ module Msf
 # by various classes to hold option values and other state information.
 #
 ###
-class DataStore < Hash
+class Datastore < Hash
 
   #
   # Initializes the data store's internal state.
@@ -247,12 +247,12 @@ end
 
 ###
 #
-# DataStore wrapper for modules that will attempt to back values against the
+# Datastore wrapper for modules that will attempt to back values against the
 # framework's datastore if they aren't found in the module's datastore.  This
 # is done to simulate global data store values.
 #
 ###
-class ModuleDataStore < DataStore
+class ModuleDatastore < Datastore
 
   def initialize(m)
     super()

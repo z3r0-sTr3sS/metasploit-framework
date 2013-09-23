@@ -700,7 +700,7 @@ class DBManager
   #   @option opts [DateTime, Time] :closed_at The date and time the sesion was
   #     closed.
   #   @option opts [String] :close_reason Reason the session was closed.
-  #   @option opts [Hash] :datastore {Msf::DataStore#to_h}.
+  #   @option opts [Hash] :datastore {Msf::Datastore#to_h}.
   #   @option opts [String] :desc Session description.  Will be truncated to 255
   #     characters.
   #   @option opts [Mdm::Host] :host The host on which the session was opened.

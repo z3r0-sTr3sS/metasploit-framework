@@ -143,7 +143,7 @@ describe Msf::DBManager do
 
 				context 'with Msf::Session' do
 					let(:exploit_datastore) do
-						Msf::ModuleDataStore.new(module_instance).tap do |datastore|
+						Msf::ModuleDatastore.new(module_instance).tap do |datastore|
 							datastore['ParentModule'] = parent_module_fullname
 
 							remote_port = rand(2 ** 16 - 1)

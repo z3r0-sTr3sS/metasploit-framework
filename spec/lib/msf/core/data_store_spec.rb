@@ -26,7 +26,7 @@ shared_examples "datastore" do
 	end
 end
 
-describe Msf::DataStore do
+describe Msf::Datastore do
 
 	describe "#import_option" do
 		subject do
