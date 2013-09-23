@@ -24,7 +24,7 @@ end
 # General
 require 'msf/core/constants'
 require 'msf/core/exceptions'
-require 'msf/core/data_store'
+require 'msf/core/datastore'
 require 'msf/core/option_container'
 
 # Event subscriber interfaces
