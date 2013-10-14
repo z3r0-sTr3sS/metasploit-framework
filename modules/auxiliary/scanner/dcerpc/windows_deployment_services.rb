@@ -141,13 +141,14 @@ class Metasploit3 < Msf::Auxiliary
   def request_client_unattend(architecture)
     # Construct WDS Control Protocol Message
     packet = Rex::Proto::DCERPC::WDSCP::Packet.new(:REQUEST, :GET_CLIENT_UNATTEND)
+    bad_char = "\x00"
 
-    guid = Rex::Text.rand_text_hex(32)
+    guid = Rex::Text.rand_text_hex(32, bad_char)
     packet.add_var(	WDS_CONST::VAR_NAME_CLIENT_GUID, guid)
 
     # Not sure what this padding is for...
     mac = [0x30].pack('C') * 20
-    mac << Rex::Text.rand_text_hex(12)
+    mac << Rex::Text.rand_text_hex(12, bad_char)
     packet.add_var(	WDS_CONST::VAR_NAME_CLIENT_MAC, mac)
 
     arch = [architecture[1]].pack('C')
