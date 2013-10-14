@@ -57,7 +57,7 @@ class Metasploit3 < Msf::Auxiliary
       query_host(ip)
     rescue ::Interrupt
       raise $!
-    rescue ::Exception => e
+    rescue ::Rex::ConnectionError => e
       print_error("#{ip}:#{rport} error: #{e}")
     end
   end
