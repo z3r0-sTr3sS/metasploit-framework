@@ -134,7 +134,7 @@ class Metasploit3 < Msf::Auxiliary
       table.print
       print_line
     else
-      print_error("No Unattend files received, service is unlikely to be configured for completely unattended installation.")
+      print_error("No Unattend files received, service may be busy or not configured for completely unattended installation.")
     end
   end
 
@@ -162,7 +162,7 @@ class Metasploit3 < Msf::Auxiliary
     print_status("Sending #{architecture[0]} Client Unattend request ...")
     response = dcerpc.call(0, wdsc_packet)
 
-    if (dcerpc.last_response != nil and dcerpc.last_response.stub_data != nil)
+    if (dcerpc.last_response and dcerpc.last_response.stub_data)
       vprint_status('Received response ...')
       data = dcerpc.last_response.stub_data
 
@@ -185,8 +185,14 @@ class Metasploit3 < Msf::Auxiliary
 
   def extract_unattend(data)
     start = data.index('<?xml')
-    finish = data.index('</unattend>')+10
-    return data[start..finish]
+    finish = data.index('</unattend>')
+    if start && finish
+      finish = finish+10
+      return data[start..finish]
+    else
+      print_error "Incomplete transmission of unattend file."
+      return nil
+    end
   end
 
   def parse_client_unattend(data)
